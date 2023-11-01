@@ -20,26 +20,26 @@ export default function Main() {
 
 		//줌 컨트롤
 		var zoomControl = new kakao.maps.ZoomControl();
-		map.addControl(zoomControl, kakao.maps.ControlPosition.RIGHT);
+		kakaoMap.addControl(zoomControl, kakao.maps.ControlPosition.RIGHT);
 		setMap(kakaoMap);
 
-		//마커 이미지 설정
-		var imageSrc = taxi_img,
-			imageSize = new kakao.maps.Size(50, 25),
-			imageOption = { offset: new kakao.maps.Point(27, 69) };
-
-		var markerImage = new kakao.maps.MarkerImage(imageSrc, imageSize, imageOption),
-			markerPosition = new kakao.maps.LatLng(process.env.REACT_APP_MAP_LATITUDE,
-				process.env.REACT_APP_MAP_LOGITUDE); // 마커가 표시될 위치입니다
-
-		// 마커 이미지 생성합니다
+		// 마커 생성합니다
 		var marker = new kakao.maps.Marker({
-			position: markerPosition,
-			image: markerImage // 마커이미지 설정 
+			map: kakaoMap,
+			position: new kakao.maps.LatLng(process.env.REACT_APP_MAP_LATITUDE, process.env.REACT_APP_MAP_LOGITUDE),
+			image: new kakao.maps.MarkerImage(taxi_img, new kakao.maps.Size(50, 25), { offset: new kakao.maps.Point(27, 69) }) // 마커이미지 설정 
 		});
-
-		//마커 이미지 지도에 표시
 		marker.setMap(kakaoMap);
+
+		//마커 이동 예시
+		let variableLongitude = 127.0022;
+		setInterval(function () {
+			marker.setPosition(new kakao.maps.LatLng(process.env.REACT_APP_MAP_LATITUDE, variableLongitude));
+			variableLongitude = Number(variableLongitude) + 0.001;
+			
+			console.log(kakaoMap.getLevel(), "Map Level"); // 레벨 가져오기
+		}, 5000);
+
 	}, []);
 
 	return (

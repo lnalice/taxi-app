@@ -1,18 +1,21 @@
 import React, { useEffect, useState, useRef} from 'react';
-import taxi_img from '../img/taxi_upper_side.png';
-
 
 const { kakao } = window;
 
 export default function Main() {
 
 	const [map, setMap] = useState(null);
-	// const [index, setIndex] = useState(0);
+
+	var index = 0;
+	var customOverlayMarker;
+	var prevDegree;
 
 	const seoulLocation = [
 		[37.47955935212742, 126.94312011533331],
 		[37.47957794314708, 126.94431852476892],
+		[37.4795004314708, 126.94500852476892],
 		[37.47941636191352, 126.94560751248083],
+		[37.47930006191352, 126.94600751248083],
 		[37.47929101942485, 126.94737131425384],
 		[37.47918344574943, 126.94861503023887],
 		[37.47905783879834, 126.94985875471353],
@@ -27,12 +30,15 @@ export default function Main() {
 		[37.48188603004106, 126.94760692504032],
 		[37.48196653708894, 126.9463066509525],
 		[37.48209213806814, 126.94513070990521],
+		[37.48213213806814, 126.94413070990521],
 		[37.482235768949664, 126.94399997659112],
 		[37.48235238061101, 126.94291448472713],
 	]
 
-	var marker;
-	var index = 0;
+	const headingDeg = async function ([beforeX, beforeY], [nextX, nextY]) {
+		var rad = Math.atan2(nextY - beforeY, nextX - beforeX);
+		return (rad*180)/Math.PI ;
+	}
 
 	useEffect(() => {
 		//지도 생성
@@ -47,24 +53,29 @@ export default function Main() {
 		var zoomControl = new kakao.maps.ZoomControl();
 		kakaoMap.addControl(zoomControl, kakao.maps.ControlPosition.RIGHT);
 		setMap(kakaoMap);
-
-		// 마커 생성
-		marker = new kakao.maps.Marker({
-			map: kakaoMap,
-			position: new kakao.maps.LatLng(process.env.REACT_APP_MAP_LATITUDE, process.env.REACT_APP_MAP_LOGITUDE),
-			image: new kakao.maps.MarkerImage(taxi_img, new kakao.maps.Size(50, 25), { offset: new kakao.maps.Point(27, 69) }) // 마커이미지 설정 
-		});
-		marker.setMap(kakaoMap);
-
-		//마커 이동 예시
-		let variableLongitude = 127.0022;
+		
+		//커스텀 오버레이 이동
 		setInterval(async function interval () {
+			if (customOverlayMarker) customOverlayMarker.setMap(null);
 			
 			if (index < seoulLocation.length) {
 				let [lat, lon] = seoulLocation[index];
-				console.log(lat, lon, "lan / lon");
-				
-				await marker.setPosition(new kakao.maps.LatLng(lat, lon));
+				// console.log(lat, lon, "lan / lon");
+
+				var deg = await headingDeg((index>0)? seoulLocation[index-1] : seoulLocation[index], seoulLocation[index])-90;
+				console.log(deg, "heading");
+
+				if (index > 0) {
+					customOverlayMarker = new kakao.maps.CustomOverlay({
+						position: new kakao.maps.LatLng(process.env.REACT_APP_MAP_LATITUDE, process.env.REACT_APP_MAP_LOGITUDE),
+						content: `<img src="/taxi_upper_side.png" style="width:40px;height:20px;transform:rotate(${deg}deg);">`
+					})
+				}
+				if (customOverlayMarker) {
+					customOverlayMarker.setMap(kakaoMap);
+					await customOverlayMarker.setPosition(new kakao.maps.LatLng(lat, lon));
+				}
+
 				index++;
 				// console.log(index, "index");
 
@@ -74,7 +85,6 @@ export default function Main() {
 	
 		}, 5000);
 	}, []);
-
 
 
 	return (
